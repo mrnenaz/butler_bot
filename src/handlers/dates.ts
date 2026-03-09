@@ -161,6 +161,41 @@ export function registerDateHandlers(bot: Bot<MyContext>): void {
     });
   });
 
+  // ── /testdelay — admin only, sends test notification to group after 1 minute ──
+  bot.command("testdelay", async (ctx) => {
+    const user = await getOrCreateUser(ctx);
+    if (
+      !user ||
+      (user.role !== "admin" && user.telegramId !== config.adminId)
+    ) {
+      await ctx.reply("⛔ Только для администратора.");
+      return;
+    }
+
+    await ctx.reply(
+      "⏱ Тестовое уведомление будет отправлено в группу через 1 минуту...",
+    );
+
+    setTimeout(async () => {
+      try {
+        await ctx.api.sendMessage(
+          config.groupChatId,
+          "🔔 <b>Тестовое уведомление</b>\n\n" +
+            "📅 Памятная дата: <b>Тест системы напоминаний</b>\n" +
+            "🔁 Повторение: 1️⃣ Один раз\n" +
+            "👥 Общедоступная\n\n" +
+            "✅ Если вы видите это сообщение — уведомления работают корректно.",
+          { parse_mode: "HTML" },
+        );
+      } catch (err: any) {
+        await ctx.reply(
+          `❌ Ошибка отправки в группу:\n<code>${err.message}</code>`,
+          { parse_mode: "HTML" },
+        );
+      }
+    }, 60 * 1000);
+  });
+
   // ── Callback queries ──
   bot.on("callback_query:data", async (ctx) => {
     const data = ctx.callbackQuery.data;
